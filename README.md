@@ -73,24 +73,47 @@ export default defineConfig([
 ```
 # fc-faces
 
-## Password Protection
+## Password Protection & Image Security
 
-This app is protected by a password to prevent unauthorized access to profile data. 
+This app is protected by a password to prevent unauthorized access to profile data and images.
 
 ### Setting the Password
 
-You can set a custom password by creating a `.env` file in the root directory with:
+You can set a custom password by creating a `.env.local` file in the root directory with:
 
 ```
 VITE_APP_PASSWORD=your-password-here
+AUTH_SECRET=your-random-secret-token-here
 ```
 
 If no password is set, the default password is `fc2024`.
 
-**Note:** The password is stored in the client-side code, so this provides basic protection against casual access but is not suitable for highly sensitive data. For production use, consider implementing server-side authentication.
+To generate a secure `AUTH_SECRET`, run:
+```bash
+node -e "console.log(require('crypto').randomBytes(32).toString('hex'))"
+```
 
 ### How It Works
 
 - Users must enter the password to access the profile data
-- Authentication is stored in `sessionStorage`, so users remain logged in for the browser session
-- Closing the browser tab/window will require re-authentication
+- Authentication is stored in `sessionStorage` and a secure HTTP-only cookie
+- All images are served through protected API endpoints that verify authentication
+- Images cannot be accessed directly via URL without proper authentication
+- Authentication persists for 24 hours via cookie, or until the browser session ends
+
+### Local Development
+
+For local development with API routes, use Vercel CLI:
+```bash
+npm install -g vercel
+vercel dev
+```
+
+This will start the development server with API route support. The standard `npm run dev` will work for the frontend, but API routes require Vercel CLI for local testing.
+
+### Deployment
+
+When deploying to Vercel:
+1. Set the `AUTH_SECRET` environment variable in your Vercel project settings
+2. Set the `VITE_APP_PASSWORD` environment variable if you want to override the default
+3. The API routes will automatically be available at `/api/*`

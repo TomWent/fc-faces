@@ -19,22 +19,6 @@ function Login({ onLogin }: { onLogin: () => void }) {
     if (password === CORRECT_PASSWORD) {
       // Store authentication in sessionStorage
       sessionStorage.setItem('fc-faces-authenticated', 'true')
-      
-      // Set auth token for API requests (protected images)
-      // Only in production - API routes aren't available in Vite dev mode
-      if (!import.meta.env.DEV) {
-        try {
-          await fetch('/api/auth', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ authenticated: true })
-          })
-        } catch (err) {
-          console.error('Failed to set auth cookie:', err)
-          // Continue anyway - sessionStorage is still set
-        }
-      }
-      
       onLogin()
     } else {
       setError('Incorrect password. Please try again.')

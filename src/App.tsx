@@ -4,7 +4,6 @@ import './App.css'
 import employeesData from './employees-data.json'
 import shortlistData from './shortlist.json'
 import Login from './Login'
-import { getProtectedImageUrl } from './utils/imageUrl'
 
 type EmployeeProfile = {
   id: string
@@ -120,7 +119,7 @@ function ProfileCard({
             <div className="front-photo">
               <img
                 className="profile-photo"
-                src={getProtectedImageUrl(employee.image)}
+                src={employee.image}
                 alt={`${employee.name} portrait`}
                 loading="lazy"
               />

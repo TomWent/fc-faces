@@ -72,4 +72,25 @@ export default defineConfig([
 ])
 ```
 # fc-faces
-# fc-faces
+
+## Password Protection
+
+This app is protected by a password to prevent unauthorized access to profile data. 
+
+### Setting the Password
+
+You can set a custom password by creating a `.env` file in the root directory with:
+
+```
+VITE_APP_PASSWORD=your-password-here
+```
+
+If no password is set, the default password is `fc2024`.
+
+**Note:** The password is stored in the client-side code, so this provides basic protection against casual access but is not suitable for highly sensitive data. For production use, consider implementing server-side authentication.
+
+### How It Works
+
+- Users must enter the password to access the profile data
+- Authentication is stored in `sessionStorage`, so users remain logged in for the browser session
+- Closing the browser tab/window will require re-authentication

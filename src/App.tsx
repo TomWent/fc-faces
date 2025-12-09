@@ -392,6 +392,9 @@ function App() {
     return sessionStorage.getItem('fc-faces-authenticated') === 'true'
   })
 
+  // Menu state
+  const [isMenuOpen, setIsMenuOpen] = useState(false)
+
   // Shortlist state
   const [isShortlistEnabled, setIsShortlistEnabled] = useState(false)
   
@@ -549,6 +552,14 @@ function App() {
     setIsShortlistEnabled((prev) => !prev)
   }
 
+  const toggleMenu = () => {
+    setIsMenuOpen((prev) => !prev)
+  }
+
+  const closeMenu = () => {
+    setIsMenuOpen(false)
+  }
+
   // Show message when all cards are completed
   if (activeEmployees.length === 0) {
     return (
@@ -587,22 +598,89 @@ function App() {
             Restart
           </button>
         </header>
-        <div className="logout-control">
-          <button
-            type="button"
-            className="logout-btn"
-            onClick={handleLogout}
-            aria-label="Logout"
-            title="Logout"
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-              <polyline points="16 17 21 12 16 7"></polyline>
-              <line x1="21" y1="12" x2="9" y2="12"></line>
-            </svg>
-            <span>Logout</span>
-          </button>
-        </div>
+        
+        {/* Menu Button */}
+        <button
+          type="button"
+          className="menu-btn"
+          onClick={toggleMenu}
+          aria-label="Open menu"
+          title="Menu"
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <line x1="3" y1="12" x2="21" y2="12"></line>
+            <line x1="3" y1="6" x2="21" y2="6"></line>
+            <line x1="3" y1="18" x2="21" y2="18"></line>
+          </svg>
+        </button>
+
+        {/* Bottom Menu Popup */}
+        {isMenuOpen && (
+          <>
+            <div className="menu-overlay" onClick={closeMenu}></div>
+            <div className="menu-popup">
+              <div className="menu-popup-handle"></div>
+              <div className="menu-popup-content">
+                {activeEmployees.length > 0 && (
+                  <div className="menu-navigation-controls">
+                    <button
+                      type="button"
+                      className="nav-btn nav-prev"
+                      onClick={goToPrevious}
+                      aria-label="Previous card"
+                    >
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      className="nav-btn nav-next"
+                      onClick={goToNext}
+                      aria-label="Next card"
+                    >
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                      </svg>
+                    </button>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  className={`shortlist-toggle ${isShortlistEnabled ? 'active' : ''}`}
+                  onClick={() => {
+                    toggleShortlist()
+                    closeMenu()
+                  }}
+                  aria-label={isShortlistEnabled ? 'Disable shortlist' : 'Enable shortlist'}
+                  title={isShortlistEnabled ? 'Show all employees' : 'Show shortlist only'}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                  </svg>
+                  <span>{isShortlistEnabled ? 'Shortlist' : 'All'}</span>
+                </button>
+                <button
+                  type="button"
+                  className="logout-btn"
+                  onClick={() => {
+                    handleLogout()
+                    closeMenu()
+                  }}
+                  aria-label="Logout"
+                  title="Logout"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                  </svg>
+                  <span>Logout</span>
+                </button>
+              </div>
+            </div>
+          </>
+        )}
       </div>
     )
   }
@@ -659,61 +737,90 @@ function App() {
           </div>
         )}
 
-        <div className="navigation-controls">
-          <button
-            type="button"
-            className="nav-btn nav-prev"
-            onClick={goToPrevious}
-            aria-label="Previous card"
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="15 18 9 12 15 6"></polyline>
-            </svg>
-          </button>
-          <button
-            type="button"
-            className="nav-btn nav-next"
-            onClick={goToNext}
-            aria-label="Next card"
-          >
-            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <polyline points="9 18 15 12 9 6"></polyline>
-            </svg>
-          </button>
-        </div>
-
-        <div className="shortlist-control">
-          <button
-            type="button"
-            className={`shortlist-toggle ${isShortlistEnabled ? 'active' : ''}`}
-            onClick={toggleShortlist}
-            aria-label={isShortlistEnabled ? 'Disable shortlist' : 'Enable shortlist'}
-            title={isShortlistEnabled ? 'Show all employees' : 'Show shortlist only'}
-          >
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-              <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
-            </svg>
-            <span>{isShortlistEnabled ? 'Shortlist' : 'All'}</span>
-          </button>
-        </div>
       </section>
 
-      <div className="logout-control">
-        <button
-          type="button"
-          className="logout-btn"
-          onClick={handleLogout}
-          aria-label="Logout"
-          title="Logout"
-        >
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
-            <polyline points="16 17 21 12 16 7"></polyline>
-            <line x1="21" y1="12" x2="9" y2="12"></line>
-          </svg>
-          <span>Logout</span>
-        </button>
-      </div>
+      {/* Menu Button */}
+      <button
+        type="button"
+        className="menu-btn"
+        onClick={toggleMenu}
+        aria-label="Open menu"
+        title="Menu"
+      >
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+
+      {/* Bottom Menu Popup */}
+      {isMenuOpen && (
+        <>
+          <div className="menu-overlay" onClick={closeMenu}></div>
+          <div className="menu-popup">
+              <div className="menu-popup-handle"></div>
+              <div className="menu-popup-content">
+                {activeEmployees.length > 0 && (
+                  <div className="menu-navigation-controls">
+                    <button
+                      type="button"
+                      className="nav-btn nav-prev"
+                      onClick={goToPrevious}
+                      aria-label="Previous card"
+                    >
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="15 18 9 12 15 6"></polyline>
+                      </svg>
+                    </button>
+                    <button
+                      type="button"
+                      className="nav-btn nav-next"
+                      onClick={goToNext}
+                      aria-label="Next card"
+                    >
+                      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="9 18 15 12 9 6"></polyline>
+                      </svg>
+                    </button>
+                  </div>
+                )}
+                <button
+                  type="button"
+                  className={`shortlist-toggle ${isShortlistEnabled ? 'active' : ''}`}
+                  onClick={() => {
+                    toggleShortlist()
+                    closeMenu()
+                  }}
+                  aria-label={isShortlistEnabled ? 'Disable shortlist' : 'Enable shortlist'}
+                  title={isShortlistEnabled ? 'Show all employees' : 'Show shortlist only'}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M19 21l-7-5-7 5V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2z"></path>
+                  </svg>
+                  <span>{isShortlistEnabled ? 'Shortlist' : 'All'}</span>
+                </button>
+                <button
+                  type="button"
+                  className="logout-btn"
+                  onClick={() => {
+                    handleLogout()
+                    closeMenu()
+                  }}
+                  aria-label="Logout"
+                  title="Logout"
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+                    <polyline points="16 17 21 12 16 7"></polyline>
+                    <line x1="21" y1="12" x2="9" y2="12"></line>
+                  </svg>
+                  <span>Logout</span>
+                </button>
+              </div>
+          </div>
+        </>
+      )}
     </div>
   )
 }

@@ -236,16 +236,14 @@ function ProfileCard({
 }
 
 function App() {
+  // ALL HOOKS MUST BE CALLED BEFORE ANY CONDITIONAL RETURNS
+  // This ensures React can properly track hook order and state
+  
   // Authentication state
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     // Check if user is already authenticated in this session
     return sessionStorage.getItem('fc-faces-authenticated') === 'true'
   })
-
-  // Show login page if not authenticated
-  if (!isAuthenticated) {
-    return <Login onLogin={() => setIsAuthenticated(true)} />
-  }
 
   // Shortlist state
   const [isShortlistEnabled, setIsShortlistEnabled] = useState(false)
@@ -264,10 +262,12 @@ function App() {
   }, [isShortlistEnabled])
   
   // Track which employees are still active in the rotation
+  // Initialize directly from availableEmployees to ensure content shows immediately after login
   const [activeEmployees, setActiveEmployees] = useState<EmployeeProfile[]>(availableEmployees)
   const [currentIndex, setCurrentIndex] = useState(0)
 
-  // Update active employees when shortlist is toggled
+  // Update active employees when availableEmployees changes (e.g., shortlist toggle)
+  // This ensures proper sync when the available employees list changes
   useEffect(() => {
     setActiveEmployees(availableEmployees)
     setCurrentIndex(0)
@@ -333,6 +333,25 @@ function App() {
       }, 1500)
     }
   }, [activeEmployees.length])
+
+  // Handler functions - defined after hooks but before conditional returns
+  const handleLogin = () => {
+    sessionStorage.setItem('fc-faces-authenticated', 'true')
+    setIsAuthenticated(true)
+  }
+
+  const handleLogout = () => {
+    // Clear authentication from sessionStorage
+    sessionStorage.removeItem('fc-faces-authenticated')
+    // Reset authentication state to show login screen
+    setIsAuthenticated(false)
+  }
+
+  // Show login page if not authenticated
+  // This conditional return is now AFTER all hooks
+  if (!isAuthenticated) {
+    return <Login onLogin={handleLogin} />
+  }
 
   const handleKnow = () => {
     // Remove current employee from rotation
@@ -418,6 +437,22 @@ function App() {
             Restart
           </button>
         </header>
+        <div className="logout-control">
+          <button
+            type="button"
+            className="logout-btn"
+            onClick={handleLogout}
+            aria-label="Logout"
+            title="Logout"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+              <polyline points="16 17 21 12 16 7"></polyline>
+              <line x1="21" y1="12" x2="9" y2="12"></line>
+            </svg>
+            <span>Logout</span>
+          </button>
+        </div>
       </div>
     )
   }
@@ -451,20 +486,28 @@ function App() {
       </header>
 
       <section className="cards-container">
-        <div className="card-progress">
-          <span className="progress-text">
-            {currentIndex + 1} / {activeEmployees.length}
-          </span>
-        </div>
+        {activeEmployees.length > 0 ? (
+          <>
+            <div className="card-progress">
+              <span className="progress-text">
+                {currentIndex + 1} / {activeEmployees.length}
+              </span>
+            </div>
 
-        <div className="single-card-view">
-          <ProfileCard
-            key={activeEmployees[currentIndex].id}
-            employee={activeEmployees[currentIndex]}
-            onKnow={handleKnow}
-            onLearning={handleLearning}
-          />
-        </div>
+            <div className="single-card-view">
+              <ProfileCard
+                key={activeEmployees[currentIndex].id}
+                employee={activeEmployees[currentIndex]}
+                onKnow={handleKnow}
+                onLearning={handleLearning}
+              />
+            </div>
+          </>
+        ) : (
+          <div className="loading-state">
+            <p>Loading profiles...</p>
+          </div>
+        )}
 
         <div className="navigation-controls">
           <button
@@ -504,6 +547,23 @@ function App() {
           </button>
         </div>
       </section>
+
+      <div className="logout-control">
+        <button
+          type="button"
+          className="logout-btn"
+          onClick={handleLogout}
+          aria-label="Logout"
+          title="Logout"
+        >
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"></path>
+            <polyline points="16 17 21 12 16 7"></polyline>
+            <line x1="21" y1="12" x2="9" y2="12"></line>
+          </svg>
+          <span>Logout</span>
+        </button>
+      </div>
     </div>
   )
 }

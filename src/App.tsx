@@ -395,6 +395,9 @@ function App() {
   // Menu state
   const [isMenuOpen, setIsMenuOpen] = useState(false)
 
+  // Scroll collapse state
+  const [isScrolled, setIsScrolled] = useState(false)
+
   // Shortlist state
   const [isShortlistEnabled, setIsShortlistEnabled] = useState(false)
   
@@ -422,6 +425,45 @@ function App() {
     setActiveEmployees(availableEmployees)
     setCurrentIndex(0)
   }, [availableEmployees])
+
+  // Handle scroll to collapse header text
+  useEffect(() => {
+    let lastIsScrolled = false
+    let rafId: number | null = null
+
+    const handleScroll = () => {
+      if (rafId) {
+        cancelAnimationFrame(rafId)
+      }
+
+      rafId = requestAnimationFrame(() => {
+        const scrollY = window.scrollY || document.documentElement.scrollTop || 0
+        const newIsScrolled = scrollY > 30
+        
+        if (newIsScrolled !== lastIsScrolled) {
+          // Small delay to prevent jumping
+          setTimeout(() => {
+            setIsScrolled(newIsScrolled)
+          }, 100)
+          lastIsScrolled = newIsScrolled
+        }
+        rafId = null
+      })
+    }
+
+    // Check initial scroll position
+    const initialScrollY = window.scrollY || document.documentElement.scrollTop || 0
+    if (initialScrollY > 30) {
+      setIsScrolled(true)
+      lastIsScrolled = true
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true })
+    return () => {
+      window.removeEventListener('scroll', handleScroll)
+      if (rafId) cancelAnimationFrame(rafId)
+    }
+  }, [])
 
   // Trigger confetti when all profiles are known
   useEffect(() => {
@@ -706,22 +748,18 @@ function App() {
             <span className="sr-only">Fashion Cloud</span>
           </span>
         </h1>
-        <h2 className="hero-subtitle">Learn the faces that power FC</h2>
-        <p className="hero-copy">
-          Tap through profiles to match names, teams, and stories. Memorize your
-          colleagues so the next hallway hello feels effortless.
-        </p>
+        <div className={`hero-text-wrapper ${isScrolled ? 'collapsed' : ''}`}>
+          <h2 className="hero-subtitle">Learn the faces that power FC</h2>
+          <p className="hero-copy">
+            Tap through profiles to match names, teams, and stories. Memorize your
+            colleagues so the next hallway hello feels effortless.
+          </p>
+        </div>
       </header>
 
       <section className="cards-container">
         {activeEmployees.length > 0 ? (
           <>
-            <div className="card-progress">
-              <span className="progress-text">
-                {currentIndex + 1} / {activeEmployees.length}
-              </span>
-            </div>
-
             <div className="single-card-view">
               <ProfileCard
                 key={activeEmployees[currentIndex].id}
@@ -729,6 +767,12 @@ function App() {
                 onKnow={handleKnow}
                 onLearning={handleLearning}
               />
+            </div>
+
+            <div className="card-progress">
+              <span className="progress-text">
+                {currentIndex + 1} / {activeEmployees.length}
+              </span>
             </div>
           </>
         ) : (

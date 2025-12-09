@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useCallback } from 'react'
+import { useState, useEffect, useMemo, useCallback, useRef } from 'react'
 import confetti from 'canvas-confetti'
 import './App.css'
 import employeesData from './employees-data.json'
@@ -41,10 +41,46 @@ function ProfileCard({
   const [swipeDirection, setSwipeDirection] = useState<'left' | 'right' | null>(null)
   const [isLearningAnimating, setIsLearningAnimating] = useState(false)
   const [isKnowAnimating, setIsKnowAnimating] = useState(false)
-  const flipCard = () => setIsFlipped((prev) => !prev)
+  const [showFirstHint, setShowFirstHint] = useState(() => {
+    const hasShownFirst = sessionStorage.getItem('fc-hints-first-shown') === 'true'
+    return !hasShownFirst
+  })
+  const [showSecondHint, setShowSecondHint] = useState(false)
+  const [secondHintState, setSecondHintState] = useState<'know' | 'learn'>('know')
+  const [isFading, setIsFading] = useState(false)
+  const wrapperRef = useRef<HTMLDivElement>(null)
+  const cardInnerRef = useRef<HTMLDivElement>(null)
+  
+  const flipCard = () => {
+    // Stop any running animations to ensure smooth transition
+    if (cardInnerRef.current) {
+      const cardInner = cardInnerRef.current
+      cardInner.style.animation = 'none'
+      // Force a reflow to ensure animation stops
+      void cardInner.offsetHeight
+      // Clear inline style after reflow so CSS can control transition
+      requestAnimationFrame(() => {
+        cardInner.style.animation = ''
+      })
+    }
+    if (showFirstHint) {
+      sessionStorage.setItem('fc-hints-first-shown', 'true')
+    }
+    setShowFirstHint(false)
+    setShowSecondHint(false)
+    setIsFlipped((prev) => !prev)
+  }
 
   const triggerKnow = useCallback(() => {
     console.log('Know:', employee.name)
+    if (showFirstHint) {
+      sessionStorage.setItem('fc-hints-first-shown', 'true')
+    }
+    if (showSecondHint) {
+      sessionStorage.setItem('fc-hints-second-shown', 'true')
+    }
+    setShowFirstHint(false)
+    setShowSecondHint(false)
     setIsKnowAnimating(true)
     setSwipeDirection('right')
     // Wait for animation to complete before calling onKnow
@@ -53,10 +89,18 @@ function ProfileCard({
       setSwipeDirection(null)
       setIsKnowAnimating(false)
     }, 500)
-  }, [employee.name, onKnow])
+  }, [employee.name, onKnow, showFirstHint, showSecondHint])
 
   const triggerLearning = useCallback(() => {
     console.log('Learning:', employee.name)
+    if (showFirstHint) {
+      sessionStorage.setItem('fc-hints-first-shown', 'true')
+    }
+    if (showSecondHint) {
+      sessionStorage.setItem('fc-hints-second-shown', 'true')
+    }
+    setShowFirstHint(false)
+    setShowSecondHint(false)
     setIsLearningAnimating(true)
     setSwipeDirection('left')
     // Wait for animation to complete before calling onLearning
@@ -65,7 +109,7 @@ function ProfileCard({
       setSwipeDirection(null)
       setIsLearningAnimating(false)
     }, 300)
-  }, [employee.name, onLearning])
+  }, [employee.name, onLearning, showFirstHint, showSecondHint])
 
   const handleKnow = (e: React.MouseEvent) => {
     e.stopPropagation()
@@ -76,6 +120,61 @@ function ProfileCard({
     e.stopPropagation()
     triggerLearning()
   }
+
+  // Hide hints when clicking outside the profile card wrapper
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(event.target as Node)) {
+        if (showFirstHint) {
+          sessionStorage.setItem('fc-hints-first-shown', 'true')
+        }
+        if (showSecondHint) {
+          sessionStorage.setItem('fc-hints-second-shown', 'true')
+        }
+        setShowFirstHint(false)
+        setShowSecondHint(false)
+      }
+    }
+
+    if (showFirstHint || showSecondHint) {
+      document.addEventListener('mousedown', handleClickOutside)
+      return () => {
+        document.removeEventListener('mousedown', handleClickOutside)
+      }
+    }
+  }, [showFirstHint, showSecondHint])
+
+  // Show second hint after first hint is dismissed
+  useEffect(() => {
+    const hasShownSecond = sessionStorage.getItem('fc-hints-second-shown') === 'true'
+    if (!hasShownSecond && !showFirstHint && !isFlipped) {
+      // Small delay before showing second hint
+      const timer = setTimeout(() => {
+        setShowSecondHint(true)
+      }, 500)
+      return () => clearTimeout(timer)
+    } else {
+      setShowSecondHint(false)
+    }
+  }, [showFirstHint, isFlipped])
+
+  // Switch second hint state every 5 seconds with fade transition
+  useEffect(() => {
+    if (!showSecondHint) {
+      return
+    }
+
+    const interval = setInterval(() => {
+      setIsFading(true)
+      // Change state after fade out
+      setTimeout(() => {
+        setSecondHintState((prev) => (prev === 'know' ? 'learn' : 'know'))
+        setIsFading(false)
+      }, 200) // Half of fade duration
+    }, 5000) // 5000ms = 5 seconds
+
+    return () => clearInterval(interval)
+  }, [showSecondHint])
 
   // Keyboard shortcuts: A for left (learning), D for right (know)
   useEffect(() => {
@@ -106,15 +205,63 @@ function ProfileCard({
   }, [triggerKnow, triggerLearning])
 
   return (
-    <div className="profile-card-wrapper">
+    <div className="profile-card-wrapper" ref={wrapperRef}>
+      {showFirstHint && !isFlipped && (
+        <div className="card-hint card-hint-first">
+          <span className="hint-text">Tap to see more</span>
+        </div>
+      )}
+      {showSecondHint && !isFlipped && (
+        <div className={`card-hint card-hint-second ${secondHintState === 'know' ? 'hint-bump-right' : 'hint-bump-left'}`}>
+          <span className="hint-text">
+            <span className={`hint-content ${isFading ? 'hint-fade-out' : 'hint-fade-in'}`}>
+              {secondHintState === 'know' ? (
+                <>
+                  If known
+                  <svg 
+                    className="hint-chevron" 
+                    width="24" 
+                    height="24" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2.5" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="9 18 15 12 9 6"></polyline>
+                  </svg>
+                </>
+              ) : (
+                <>
+                  <svg 
+                    className="hint-chevron" 
+                    width="24" 
+                    height="24" 
+                    viewBox="0 0 24 24" 
+                    fill="none" 
+                    stroke="currentColor" 
+                    strokeWidth="2.5" 
+                    strokeLinecap="round" 
+                    strokeLinejoin="round"
+                  >
+                    <polyline points="15 18 9 12 15 6"></polyline>
+                  </svg>
+                  If learning
+                </>
+              )}
+            </span>
+          </span>
+        </div>
+      )}
       <button
         type="button"
-        className={`profile-card ${isFlipped ? 'is-flipped' : ''} ${swipeDirection ? `swipe-${swipeDirection}` : ''}`}
+        className={`profile-card ${isFlipped ? 'is-flipped' : ''} ${swipeDirection ? `swipe-${swipeDirection}` : ''} ${showFirstHint && !isFlipped ? 'hint-flip' : ''}`}
         onClick={flipCard}
         aria-pressed={isFlipped}
         aria-label={`Flip profile card for ${employee.name}`}
       >
-        <div className="card-inner">
+        <div className="card-inner" ref={cardInnerRef}>
           <article className="card-face card-front">
             <div className="front-photo">
               <img
@@ -337,6 +484,9 @@ function App() {
   // Handler functions - defined after hooks but before conditional returns
   const handleLogin = () => {
     sessionStorage.setItem('fc-faces-authenticated', 'true')
+    // Reset hint flags on login so hints show once per login session
+    sessionStorage.removeItem('fc-hints-first-shown')
+    sessionStorage.removeItem('fc-hints-second-shown')
     setIsAuthenticated(true)
   }
 

@@ -5,7 +5,7 @@ import './Login.css'
 // This is still visible in the bundle, but better than plain text
 // For production, consider using a backend API for authentication
 // Password has been changed from the default - contact admin for access
-const PASSWORD_HASH = 'b112c32a81545372dbc454f77e1d912024b26022799e04043a4f149dabb8e6cf' // SHA-256 hash
+const PASSWORD_HASH = '3b2a64c27956e0c00584c192234ada35a91d987b729c78dddbd7a3928e58fee4' // SHA-256 hash
 
 // Rate limiting: track failed attempts
 const MAX_ATTEMPTS = 5

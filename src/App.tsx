@@ -503,13 +503,20 @@ function App() {
     // Reset hint flags on login so hints show once per login session
     sessionStorage.removeItem('fc-hints-first-shown')
     sessionStorage.removeItem('fc-hints-second-shown')
+    // Reset active employees to full randomized list to start fresh session
+    setActiveEmployees(shuffleArray(availableEmployees))
+    setCurrentIndex(0)
     setIsAuthenticated(true)
   }
 
   const handleLogout = () => {
-    // Clear authentication from sessionStorage
+    // Clear all session data to reset the session completely
     sessionStorage.removeItem('fc-faces-authenticated')
+    sessionStorage.removeItem('fc-hints-first-shown')
+    sessionStorage.removeItem('fc-hints-second-shown')
     // Reset authentication state to show login screen
+    // This will cause the component to unmount and remount on next login,
+    // which will reset activeEmployees to the full randomized list
     setIsAuthenticated(false)
   }
 

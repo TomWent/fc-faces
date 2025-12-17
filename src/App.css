@@ -135,6 +135,10 @@
 .card-progress {
   text-align: center;
   margin-top: 0.5rem;
+  width: 100%;
+  max-width: 380px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 .progress-text {
@@ -147,8 +151,8 @@
 .progress-counters {
   display: flex;
   justify-content: center;
-  gap: 1.5rem;
-  flex-wrap: wrap;
+  gap: 0.75rem;
+  width: 100%;
 }
 
 .progress-counter {
@@ -156,6 +160,24 @@
   flex-direction: column;
   align-items: center;
   gap: 0.25rem;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  transition: all 0.2s ease;
+  flex: 1;
+  min-width: 0;
+}
+
+.counter-learning {
+  background: rgba(59, 130, 246, 0.12);
+  border: 2px solid rgba(59, 130, 246, 0.25);
+}
+
+.counter-known {
+  background: rgba(34, 197, 94, 0.12);
+  border: 2px solid rgba(34, 197, 94, 0.25);
 }
 
 .counter-label {
@@ -166,10 +188,20 @@
   text-transform: uppercase;
 }
 
+.counter-learning .counter-label,
+.counter-known .counter-label {
+  color: rgba(255, 255, 255, 0.9);
+}
+
 .counter-value {
   font-size: 1.25rem;
   color: var(--text-primary);
   font-weight: 600;
+}
+
+.counter-learning .counter-value,
+.counter-known .counter-value {
+  color: #fff;
 }
 
 .shortlist-toggle {

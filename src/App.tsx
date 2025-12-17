@@ -787,7 +787,7 @@ function App() {
 
             <div className="card-progress">
               <div className="progress-counters">
-                <div className="progress-counter">
+                <div className="progress-counter counter-learning">
                   <span className="counter-label">Learning</span>
                   <span className="counter-value">{learningEmployeeIds.size}</span>
                 </div>
@@ -795,7 +795,7 @@ function App() {
                   <span className="counter-label">Remaining</span>
                   <span className="counter-value">{activeEmployees.length}</span>
                 </div>
-                <div className="progress-counter">
+                <div className="progress-counter counter-known">
                   <span className="counter-label">Known</span>
                   <span className="counter-value">{knownEmployeeIds.size}</span>
                 </div>

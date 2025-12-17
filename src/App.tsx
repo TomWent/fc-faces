@@ -428,12 +428,19 @@ function App() {
   )
   const [currentIndex, setCurrentIndex] = useState(0)
 
+  // Track known and learning employees by ID
+  const [knownEmployeeIds, setKnownEmployeeIds] = useState<Set<string>>(new Set())
+  const [learningEmployeeIds, setLearningEmployeeIds] = useState<Set<string>>(new Set())
+
   // Update active employees when availableEmployees changes (e.g., shortlist toggle)
   // This ensures proper sync when the available employees list changes
   // Re-shuffle when the available employees list changes
   useEffect(() => {
     setActiveEmployees(shuffleArray(availableEmployees))
     setCurrentIndex(0)
+    // Reset counters when switching between all/shortlist
+    setKnownEmployeeIds(new Set())
+    setLearningEmployeeIds(new Set())
   }, [availableEmployees])
 
   // Trigger confetti when all profiles are known
@@ -506,6 +513,9 @@ function App() {
     // Reset active employees to full randomized list to start fresh session
     setActiveEmployees(shuffleArray(availableEmployees))
     setCurrentIndex(0)
+    // Reset counters on login
+    setKnownEmployeeIds(new Set())
+    setLearningEmployeeIds(new Set())
     setIsAuthenticated(true)
   }
 
@@ -528,8 +538,17 @@ function App() {
 
   const handleKnow = () => {
     // Remove current employee from rotation
+    const currentEmployee = activeEmployees[currentIndex]
     const newActiveEmployees = activeEmployees.filter((_, index) => index !== currentIndex)
     setActiveEmployees(newActiveEmployees)
+
+    // Add to known employees and remove from learning (if they were learning)
+    setKnownEmployeeIds((prev) => new Set([...prev, currentEmployee.id]))
+    setLearningEmployeeIds((prev) => {
+      const newSet = new Set(prev)
+      newSet.delete(currentEmployee.id)
+      return newSet
+    })
 
     // Adjust current index if needed
     if (newActiveEmployees.length > 0) {
@@ -554,6 +573,10 @@ function App() {
         currentProfile
       ]
       setActiveEmployees(newActiveEmployees)
+
+      // Add to learning employees
+      setLearningEmployeeIds((prev) => new Set([...prev, currentProfile.id]))
+
       // If we were at the last index, wrap around to 0
       // Otherwise, stay at the same index (which now shows the next card after removal)
       if (currentIndex >= activeEmployees.length - 1) {
@@ -578,6 +601,9 @@ function App() {
     // Re-shuffle when restarting to get a new random order
     setActiveEmployees(shuffleArray(availableEmployees))
     setCurrentIndex(0)
+    // Reset counters on restart
+    setKnownEmployeeIds(new Set())
+    setLearningEmployeeIds(new Set())
   }
 
   const toggleShortlist = () => {
@@ -760,9 +786,20 @@ function App() {
             </div>
 
             <div className="card-progress">
-              <span className="progress-text">
-                {currentIndex + 1} / {activeEmployees.length}
-              </span>
+              <div className="progress-counters">
+                <div className="progress-counter">
+                  <span className="counter-label">Learning</span>
+                  <span className="counter-value">{learningEmployeeIds.size}</span>
+                </div>
+                <div className="progress-counter">
+                  <span className="counter-label">Remaining</span>
+                  <span className="counter-value">{activeEmployees.length}</span>
+                </div>
+                <div className="progress-counter">
+                  <span className="counter-label">Known</span>
+                  <span className="counter-value">{knownEmployeeIds.size}</span>
+                </div>
+              </div>
             </div>
           </>
         ) : (

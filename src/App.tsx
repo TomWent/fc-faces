@@ -28,6 +28,16 @@ const allEmployees: EmployeeProfile[] = (employeesData as EmployeeProfile[])
 
 const shortlistNames: string[] = shortlistData as string[]
 
+// Fisher-Yates shuffle algorithm to randomize array order
+function shuffleArray<T>(array: T[]): T[] {
+  const shuffled = [...array]
+  for (let i = shuffled.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1))
+    ;[shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]]
+  }
+  return shuffled
+}
+
 function ProfileCard({
   employee,
   onKnow,
@@ -412,14 +422,17 @@ function App() {
   }, [isShortlistEnabled])
   
   // Track which employees are still active in the rotation
-  // Initialize directly from availableEmployees to ensure content shows immediately after login
-  const [activeEmployees, setActiveEmployees] = useState<EmployeeProfile[]>(availableEmployees)
+  // Initialize with shuffled order to randomize profile order
+  const [activeEmployees, setActiveEmployees] = useState<EmployeeProfile[]>(() => 
+    shuffleArray(availableEmployees)
+  )
   const [currentIndex, setCurrentIndex] = useState(0)
 
   // Update active employees when availableEmployees changes (e.g., shortlist toggle)
   // This ensures proper sync when the available employees list changes
+  // Re-shuffle when the available employees list changes
   useEffect(() => {
-    setActiveEmployees(availableEmployees)
+    setActiveEmployees(shuffleArray(availableEmployees))
     setCurrentIndex(0)
   }, [availableEmployees])
 
@@ -525,9 +538,20 @@ function App() {
   }
 
   const handleLearning = () => {
-    // Keep in rotation and move to next card
+    // Keep in rotation and move current profile to the back of the queue
     if (activeEmployees.length > 0) {
-      setCurrentIndex((prev) => (prev + 1) % activeEmployees.length)
+      const currentProfile = activeEmployees[currentIndex]
+      const newActiveEmployees = [
+        ...activeEmployees.slice(0, currentIndex),
+        ...activeEmployees.slice(currentIndex + 1),
+        currentProfile
+      ]
+      setActiveEmployees(newActiveEmployees)
+      // If we were at the last index, wrap around to 0
+      // Otherwise, stay at the same index (which now shows the next card after removal)
+      if (currentIndex >= activeEmployees.length - 1) {
+        setCurrentIndex(0)
+      }
     }
   }
 
@@ -544,7 +568,8 @@ function App() {
   }
 
   const handleRestart = () => {
-    setActiveEmployees(availableEmployees)
+    // Re-shuffle when restarting to get a new random order
+    setActiveEmployees(shuffleArray(availableEmployees))
     setCurrentIndex(0)
   }
 

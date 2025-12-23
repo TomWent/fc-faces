@@ -431,6 +431,8 @@ function App() {
   // Track known and learning employees by ID
   const [knownEmployeeIds, setKnownEmployeeIds] = useState<Set<string>>(new Set())
   const [learningEmployeeIds, setLearningEmployeeIds] = useState<Set<string>>(new Set())
+  // Track order of known employees (most recent last) for back button functionality
+  const [knownEmployeesHistory, setKnownEmployeesHistory] = useState<EmployeeProfile[]>([])
 
   // Update active employees when availableEmployees changes (e.g., shortlist toggle)
   // This ensures proper sync when the available employees list changes
@@ -441,6 +443,7 @@ function App() {
     // Reset counters when switching between all/shortlist
     setKnownEmployeeIds(new Set())
     setLearningEmployeeIds(new Set())
+    setKnownEmployeesHistory([])
   }, [availableEmployees])
 
   // Trigger confetti when all profiles are known
@@ -516,6 +519,7 @@ function App() {
     // Reset counters on login
     setKnownEmployeeIds(new Set())
     setLearningEmployeeIds(new Set())
+    setKnownEmployeesHistory([])
     setIsAuthenticated(true)
   }
 
@@ -549,6 +553,8 @@ function App() {
       newSet.delete(currentEmployee.id)
       return newSet
     })
+    // Track in history for back button functionality
+    setKnownEmployeesHistory((prev) => [...prev, currentEmployee])
 
     // Adjust current index if needed
     if (newActiveEmployees.length > 0) {
@@ -592,7 +598,30 @@ function App() {
   }
 
   const goToPrevious = () => {
-    if (activeEmployees.length > 0) {
+    // If there are known employees, restore the most recent one
+    if (knownEmployeesHistory.length > 0) {
+      const mostRecentKnown = knownEmployeesHistory[knownEmployeesHistory.length - 1]
+      
+      // Remove from known set
+      setKnownEmployeeIds((prev) => {
+        const newSet = new Set(prev)
+        newSet.delete(mostRecentKnown.id)
+        return newSet
+      })
+      
+      // Remove from history
+      setKnownEmployeesHistory((prev) => prev.slice(0, -1))
+      
+      // Add back to active employees at current position
+      const newActiveEmployees = [
+        ...activeEmployees.slice(0, currentIndex),
+        mostRecentKnown,
+        ...activeEmployees.slice(currentIndex)
+      ]
+      setActiveEmployees(newActiveEmployees)
+      // Stay at current index (which now shows the restored employee)
+    } else if (activeEmployees.length > 0) {
+      // Normal navigation within active employees
       setCurrentIndex((prev) => (prev - 1 + activeEmployees.length) % activeEmployees.length)
     }
   }
@@ -604,6 +633,7 @@ function App() {
     // Reset counters on restart
     setKnownEmployeeIds(new Set())
     setLearningEmployeeIds(new Set())
+    setKnownEmployeesHistory([])
   }
 
   const toggleShortlist = () => {
